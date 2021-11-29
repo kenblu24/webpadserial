@@ -1,0 +1,43 @@
+.ControllerIndicator {
+	transform: scale(1);
+	transition: transform 0.3s cubic-bezier(0.3, 2.5, 0.7, 1);  // pop in
+	&.hide {
+		transform: scale(0);
+		transition: transform 0.3s cubic-bezier(0.3, -1.5, 1, 0.1);  // pop out
+	}
+
+	.prefix__ControllerIndicator {
+		// stroke: #000;
+		stroke-miterlimit: 10;
+		fill: #fff;
+		filter: drop-shadow( -3px 3px 8px hsla(0, 0%, 10%, .3));
+	}
+	text.controllerIndex {
+		fill: #000;
+	}
+}
+
+.GamepadVizContainer {
+	.prefix__st0 {
+	    stroke: #000;
+	    stroke-miterlimit: 10
+	}
+
+	.prefix__st0,
+	.prefix__st1 {
+	    fill: #fff
+	}
+	.prefix__st2 {
+	    fill: none;
+	    stroke: #000;
+	    stroke-miterlimit: 10
+	}
+
+	.on {
+	    fill: #000
+	}
+
+	text.controllerIndex {
+		fill: #555;
+	}
+}

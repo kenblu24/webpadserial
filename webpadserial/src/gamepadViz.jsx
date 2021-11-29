@@ -1,5 +1,5 @@
 import React from 'react';
-import './App.scss';
+import './GamepadViz.scss';
 
 function GamepadViz(props) {
 	const aMax = 9.5;
@@ -15,13 +15,7 @@ function GamepadViz(props) {
 				y={0}
 				viewBox="0 0 300 240"
 				xmlSpace="preserve"
-				{...props}
 			>
-				<style>
-					{
-						".prefix__st0{stroke:#000;stroke-miterlimit:10}.prefix__st0,.prefix__st1{fill:#fff}.prefix__st2{fill:none;stroke:#000;stroke-miterlimit:10}.on{fill:#000}"
-					}
-				</style>
 				<path
 					className="prefix__st1 lb"
 					d="M50.5 72.3s1.3-3.2 3.7-9.3c2.8-7.1 38.2-15 43.5-9.1 3.8 4.2 7.9 4.7 7.9 4.7"
@@ -82,9 +76,59 @@ function GamepadViz(props) {
 					d="M234.3 17.2c4 2 13.6 30.5-3.5 27.3s-9.8-17.8-10.1-28.8c4.3-.9 9.6-.5 13.6 1.5z"
 					fillOpacity={b.RIGHT_SHOULDER_BOTTOM?.value || 0}
 				/>
+				<text
+					className="controllerIndex"
+					x="150"
+					y="218"
+					fontSize="36"
+					fontWeight="700"
+					textAnchor="middle"
+				>
+					{props.showIndex ? (props.c.index + 1) : null}
+				</text>
 			</svg>
 		</div>
 	)
+}
+
+export function ControllerIndicator(props) {
+	const classes = ("ControllerIndicator"
+		+ (!props.active && " hide")
+	);
+	return(
+		<div className={classes}>
+			<svg
+				id="prefix__ControllerIndicator"
+				xmlns="http://www.w3.org/2000/svg"
+				x={0}
+				y={0}
+				viewBox="0 0 300 240"
+				xmlSpace="preserve"
+				{...props}
+			>
+				<style>
+					{
+						// ".prefix__st0{stroke:#000;stroke-miterlimit:10}.prefix__st0,.prefix__st1{fill:#fff}"
+					}
+				</style>
+				<path
+					className="prefix__ControllerIndicator"
+					d="M150 58c73.1 0 92.1-.9 106 23.3s27 63.6 29.2 75.2c2.2 11.6 16.9 71.4-19.8 71.4-8.3 0-40.2-28.9-53.1-38-12.9-9.2-37.7-7.3-62.3-7.3M150 58c-73.1 0-92.1-.9-106 23.3s-27 63.6-29.2 75.2C12.5 168.2-2.1 228 34.5 228c8.3 0 40.2-28.9 53.1-38 12.9-9.2 37.7-7.3 62.3-7.3"
+				/>
+				<text
+					className="controllerIndex"
+					x="150"
+					y="140"
+					fontSize="75"
+					fontWeight="700"
+					textAnchor="middle"
+				>
+					{props.index}
+				</text>
+			</svg>
+
+		</div>
+	);
 }
 
 export default GamepadViz;
