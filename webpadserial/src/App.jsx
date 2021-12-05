@@ -1,7 +1,7 @@
 import React from 'react';
 import { Transition, animated, config } from 'react-spring'
 import './App.scss';
-import { ControllerButton } from './FooterBarComponents'
+import { ConnectButton, ControllerButton } from './FooterBarComponents'
 import { BlimpButton } from './BlimpGridComponents'
 import * as cjs from './Controller.js';
 
@@ -38,6 +38,7 @@ class App extends React.Component {
       serialSupported: false,
       serialConnected: false,
       port: null,
+      portParameters: null,
       blimps: null,
       controllers: null,
       selectedController: null,
@@ -100,14 +101,13 @@ class App extends React.Component {
     this.setState(state);
   }
 
-  async handleConnectButtonClick() {
+  trySerialConnect = async (event, args) => {
     let state = this.state;
     if (state.serialConnected === false) {
       try {
         // try to connect to port
-        const ports = await navigator.serial.requestPort();
-        console.log(ports);
-        state.port = ports;
+        const port = await navigator.serial.requestPort();
+        state.port = port;
         state.port.open({baudRate: 115200});
         state.serialConnected = true;
       } catch (error) {
@@ -116,9 +116,10 @@ class App extends React.Component {
     }
     else {
       try {
-        state.port.close();
         state.serialConnected = false;
+        state.port.close();
       } catch (error) {
+        state.serialConnected = true;
         console.error(error);
       }
     }
@@ -236,11 +237,11 @@ region: Render Main App
       </div>
       <footer className="App-footer" >
         <div className="Connection-container">
-          <div className={'ConnectButton footerButton' + (this.state.serialConnected ? ' connected' : ' disconnected')}
-              onClick={() => this.handleConnectButtonClick()}>
-            <h2> {this.state.serialConnected ? 'Connected' : 'Disconnected'} </h2>
-            <span>115200 Baud</span>
-          </div>
+          <ConnectButton
+            serialSupported={this.state.serialSupported}
+            serialConnected={this.state.serialConnected}
+            doSerialConnect={this.trySerialConnect}
+          />
         </div>
         <div className="controllers" onClickCapture={(e) => this.selectController(null)} >
           {controllers}
