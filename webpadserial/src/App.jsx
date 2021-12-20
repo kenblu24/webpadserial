@@ -27,7 +27,13 @@ class Blimp {
   constructor(id) {
     this.id = id;
     this.controllerId = null;
-    this.isControllerAttached = false;
+    // this.isControllerAttached = false;
+  }
+  get isControllerAttached() {
+    if (this.controllerId == null)
+      return false;
+    else
+      return true;
   }
 }
 
