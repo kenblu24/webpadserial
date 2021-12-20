@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import './FooterBarComponents.scss';
-import { Transition, animated } from 'react-spring'
+import { useTransition, animated } from 'react-spring'
 
 export function ConnectButton(props) {
   const connectButtonClasses = (() => {
@@ -119,60 +119,60 @@ export function GamepadViz(props) {
         </text>
       </svg>
     </div>
-  )
+  );
 }
 
 export function ControllerIndicator(props) {
-  // const hide = !props.show || props.value == null;
-  // const classes = ("ControllerIndicator"
-  //  + (hide ? " hide" : "")
-  // );
-  return(
-    <Transition
-      items={props.value}
-      from={{scale: 0}}
-      enter={{scale: 1}}
-      leave={{scale: 0}}
-      config={{
+  console.log(props.value);
+  const transitions = useTransition(props.value, {
+    from: {scale: 0},
+    enter: {scale: 1},
+    leave: {scale: 0},
+    config: {
         mass: 1,
         tension: 380,
         friction: 12,
-      }}
-    >{(styles, item) => {
-      // styles.scale = styles.scale > 0 || 0;
-      return (item == null ? null : (<animated.div className={"ControllerIndicator"} style={styles}>
-        <svg
-          id="prefix__ControllerIndicator"
-          xmlns="http://www.w3.org/2000/svg"
-          x={0}
-          y={0}
-          viewBox="0 0 300 240"
-          xmlSpace="preserve"
+    },
+  });
+  const retval = transitions( (styles, item) => {
+    console.log(styles);
+    console.log(item);
+    (<animated.div className={"ControllerIndicator"}
+      style={styles}
+    >
+      <svg
+        id="prefix__ControllerIndicator"
+        xmlns="http://www.w3.org/2000/svg"
+        x={0}
+        y={0}
+        viewBox="0 0 300 240"
+        xmlSpace="preserve"
+      >
+        <style>
+          {
+            // ".prefix__st0{stroke:#000;stroke-miterlimit:10}.prefix__st0,.prefix__st1{fill:#fff}"
+          }
+        </style>
+        <path
+          className="prefix__ControllerIndicator"
+          d="M150 58c73.1 0 92.1-.9 106 23.3s27 63.6 29.2 75.2c2.2 11.6 16.9 71.4-19.8 71.4-8.3 0-40.2-28.9-53.1-38-12.9-9.2-37.7-7.3-62.3-7.3M150 58c-73.1 0-92.1-.9-106 23.3s-27 63.6-29.2 75.2C12.5 168.2-2.1 228 34.5 228c8.3 0 40.2-28.9 53.1-38 12.9-9.2 37.7-7.3 62.3-7.3"
+        />
+        <text
+          className="controllerIndex"
+          x="150"
+          y="140"
+          fontSize="75"
+          fontWeight="700"
+          textAnchor="middle"
         >
-          <style>
-            {
-              // ".prefix__st0{stroke:#000;stroke-miterlimit:10}.prefix__st0,.prefix__st1{fill:#fff}"
-            }
-          </style>
-          <path
-            className="prefix__ControllerIndicator"
-            d="M150 58c73.1 0 92.1-.9 106 23.3s27 63.6 29.2 75.2c2.2 11.6 16.9 71.4-19.8 71.4-8.3 0-40.2-28.9-53.1-38-12.9-9.2-37.7-7.3-62.3-7.3M150 58c-73.1 0-92.1-.9-106 23.3s-27 63.6-29.2 75.2C12.5 168.2-2.1 228 34.5 228c8.3 0 40.2-28.9 53.1-38 12.9-9.2 37.7-7.3 62.3-7.3"
-          />
-          <text
-            className="controllerIndex"
-            x="150"
-            y="140"
-            fontSize="75"
-            fontWeight="700"
-            textAnchor="middle"
-          >
-            {item == null ? null : (parseInt(item) + 1)}
-          </text>
-        </svg>
+          {item == null ? null : (parseInt(item) + 1)}
+        </text>
+      </svg>
 
-      </animated.div>))
-    }}</Transition>
-  );
+    </animated.div>);
+  });
+  console.log(retval);
+  return retval;
 }
 
 export function ControllerButton(props) {
