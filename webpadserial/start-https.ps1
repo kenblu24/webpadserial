@@ -1,2 +1,3 @@
-$env:HTTPS='true'
 npm start
+
+pause
