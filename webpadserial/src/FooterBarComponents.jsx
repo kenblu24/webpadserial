@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import './FooterBarComponents.scss';
 import { useTransition, animated } from 'react-spring'
 
@@ -102,6 +102,61 @@ export function ControllerButton(props) {
       props.onEnter && props.onEnter(e, inputValue);
     }
   }
+
+  // Taken from arduino's map function
+  let remap = function(x, in_min, in_max, out_min, out_max) {
+    return Math.ceil((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
+  }
+
+  const watchedInputs = [
+    c.inputs.analogSticks.LEFT_ANALOG_STICK.position,
+    c.inputs.analogSticks.RIGHT_ANALOG_STICK.position,
+    c.inputs.buttons.DPAD_DOWN.value,
+    c.inputs.buttons.DPAD_LEFT.value,
+    c.inputs.buttons.DPAD_RIGHT.value,
+    c.inputs.buttons.DPAD_UP.value,
+    c.inputs.buttons.FACE_1.value,
+    c.inputs.buttons.FACE_2.value,
+    c.inputs.buttons.FACE_3.value,
+    c.inputs.buttons.FACE_4.value,
+    c.inputs.buttons.HOME.value,
+    c.inputs.buttons.LEFT_ANALOG_BUTTON.value,
+    c.inputs.buttons.LEFT_SHOULDER.value,
+    c.inputs.buttons.LEFT_SHOULDER_BOTTOM.value,
+    c.inputs.buttons.RIGHT_ANALOG_BUTTON.value,
+    c.inputs.buttons.RIGHT_SHOULDER.value,
+    c.inputs.buttons.RIGHT_SHOULDER_BOTTOM.value,
+    c.inputs.buttons.SELECT.value,
+    c.inputs.buttons.START.value,
+  ];
+
+  useEffect(() => {
+    if (c.attachedBlimp >= 0) {
+      // console.log("controlBlimpsViaOverride", blimp)
+      // console.log("after check", blimp.controllerId)
+      const buttons = c.inputs.buttons;
+      const sticks = c.inputs.analogSticks;
+      const stickDeadzone = 40;
+
+      let vertical = remap(sticks.RIGHT_ANALOG_STICK.position.y, -1, 1, -511, 511);
+      let forwards = remap(buttons.RIGHT_SHOULDER_BOTTOM.value - buttons.LEFT_SHOULDER_BOTTOM.value, -1, 1, -511, 511);
+      let tail_angle = remap(sticks.LEFT_ANALOG_STICK.position.x, -1, 1, -90, 90);
+      let grabberStatus = buttons.RIGHT_SHOULDER.value - buttons.LEFT_SHOULDER.value;
+
+      if (Math.abs(vertical) < stickDeadzone)
+        vertical = 0;
+      if (Math.abs(tail_angle) < stickDeadzone)
+        tail_angle = 0;
+
+      if (buttons.SELECT.pressed) {
+        props.setBlimpMode(c.attachedBlimp, "Autonomous");
+      } else if (buttons.START.pressed) {
+        props.setBlimpMode(c.attachedBlimp, "Manual");
+      } else {
+        props.handleInput(c.attachedBlimp, `[${c.attachedBlimp},${tail_angle},${forwards},${vertical},${grabberStatus}]\n`)
+      }
+    }
+  }, watchedInputs);
 
   return (
     <div className={"ControllerButton-wrapper" + dynClasses} index={c.index.toString()}>

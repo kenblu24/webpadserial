@@ -29,6 +29,13 @@ class Blimp {
     this.controllerId = null;
     this.isControllerAttached = false;
     this.isAutonomous = true;
+    this.send_history = []
+  }
+
+  sendQueueAppend(message) {
+    if(this.send_history.push(message) > 999)
+      this.send_history = this.send_history.slice(-999)
+
   }
 }
 
@@ -40,10 +47,12 @@ class App extends React.Component {
       serialConnected: false,
       port: null,
       portParameters: null,
-      blimps: null,
+      blimps: [],
       controllers: null,
       selectedController: null,
     }
+
+    this.encoder = new TextEncoder();
   }
 
   componentDidMount() {
@@ -94,8 +103,8 @@ class App extends React.Component {
     let state = this.state;
     state.controllers = Object.values(cjs.Controller.controllers) || null;
     this.setState(state);
-    for (let controller of state.controllers) {
-      if (state.selectedController === controller.index)
+    for (let controller of state.controllers) {  // the newly disconnected controller won't be in state.controllers
+      if (state.selectedController === controller.index)  // if the selected controller is still connected, return since it's not the one that just disconnected.
         return;
     }
     state.selectedController = null;
@@ -109,10 +118,13 @@ class App extends React.Component {
         // try to connect to port
         const port = await navigator.serial.requestPort();
         state.port = port;
-        state.port.open({baudRate: 115200});
+        state.port.open({baudRate: 115200}).catch((error) => {
+          state.serialConnected = false;
+          console.error(error);
+        });
         state.serialConnected = true;
       } catch (error) {
-        console.log(error);
+        state.serialConnected = false;
       }
     }
     else {
@@ -155,7 +167,6 @@ class App extends React.Component {
     for (let i in state.blimps)
       if (state.blimps[i].controllerId === controller.index) {
         state.blimps[i].controllerId = null;
-        this.setBlimpToAutonmous(state.blimps[i]);
       }
     // unset this blimp from all controllers
     for (let i in state.controllers)
@@ -163,7 +174,6 @@ class App extends React.Component {
         state.controllers[i].attachedBlimp = null;
     // add this controller to the desired blimp
     state.blimps[id].controllerId = controller.index;
-    this.setBlimpToOverride(state.blimps[id]);
     // associate desired blimp with desired controller
     state.controllers[this.getControllersIndexById(controller.index)].attachedBlimp = id;
     this.setState(state);
@@ -171,66 +181,46 @@ class App extends React.Component {
 
   addBlimp = id => {
     let state = this.state;
-    if (state.blimps == null)
-      state.blimps = [];
     state.blimps[id] = (new Blimp(id));
     this.setState(state);
   }
 
   // Taken from arduino's map function
-	remap(x, in_min, in_max, out_min, out_max) {
-		return Math.ceil((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
-	}
+  remap(x, in_min, in_max, out_min, out_max) {
+    return Math.ceil((x - in_min) * (out_max - out_min) / (in_max - in_min) + out_min);
+  }
 
   // Writes output to serial if any serial port is connected
   serialWrite(value) {
-    console.log(value);
     if (!this.state.serialConnected) { return; }
 
-    const encoder = new TextEncoder();
     const writer = this.state.port?.writable?.getWriter();
-    writer.write(encoder.encode(value));
+    writer.write(this.encoder.encode(value));
     writer?.releaseLock();
   }
 
-  setBlimpToAutonmous(blimp) {
-    this.serialWrite(`<${blimp.id}`);
-    blimp.isAutonomous = true;
+  queueMessage = (blimpId, message) => {
+    let state = this.state;
+    state.blimps[blimpId].sendQueueAppend(message);
+    this.serialWrite(message);
+    this.setState(state);
   }
 
-  setBlimpToOverride(blimp) {
-    this.serialWrite(`>${blimp.id}]`);
-    blimp.isAutonomous = false;
+  setBlimpMode = (blimpId, mode) => {
+    let state = this.state;
+    if (!state.blimps[blimpId]) {
+      return;
+    }
+    if (mode == "Autonomous") {
+      this.queueMessage(blimpId, `>${blimpId}\n`);
+      state.blimps[blimpId].isAutonomous = true;
+    }
+    else if (mode == "Manual") {
+      this.queueMessage(blimpId, `<${blimpId}\n`);
+      state.blimps[blimpId].isAutonomous = false;
+    }
+    this.setState(state);
   }
-
-  // Polls inputs and outputs them to a serial port based on the blimp's controller id.
-  // If no controller id was found, the blimp is probably autonomous somehow.
-	controlBlimpsViaOverride(blimp) {
-		if (blimp.controllerId == null) { return; }
-
-    const stickDeadzone = 40;
-		const buttons = this.state.controllers[blimp.controllerId].inputs.buttons;
-		const sticks = this.state.controllers[blimp.controllerId].inputs.analogSticks;
-
-		let thrust = this.remap(sticks.RIGHT_ANALOG_STICK.position.y, -1, 1, -255, 255);
-		let dir = this.remap(buttons.RIGHT_SHOULDER_BOTTOM.value - buttons.LEFT_SHOULDER_BOTTOM.value, -1, 1, -128, 128);
-		let tail = this.remap(sticks.RIGHT_ANALOG_STICK.position.x, -1, 1, -90, 90);
-		let grabberStatus = buttons.RIGHT_SHOULDER.value - buttons.LEFT_SHOULDER.value;
-
-		if (Math.abs(thrust) < stickDeadzone)
-			thrust = 0;
-		if (Math.abs(tail) < stickDeadzone)
-			tail = 0;
-
-		if (buttons.SELECT.pressed) {
-			this.setBlimpToAutonmous(blimp);
-		} else if (buttons.START.pressed) {
-			this.setBlimpToOverride(blimp);
-		} else {
-      // Outputs information to serial in this format: [blimpid, thrust, dir, tail, grabberstatus]
-      this.serialWrite(`[${blimp.id},${thrust},${dir},${tail},${grabberStatus}]`);
-		}
-	}
 
 /*
 == == == == == == == ==
@@ -252,6 +242,8 @@ region: Render Main App
         onEnter={(e, value) => {
           this.attachControllerToBlimp(e, value, obj);
         }}
+        handleInput={this.queueMessage}
+        setBlimpMode={this.setBlimpMode}
       />
     )}) || null;
 
@@ -262,7 +254,7 @@ region: Render Main App
         const blimp = this.state.blimps[index];
 
         // This is here because it's in the render loop and this is the loop going over every blimp.
-				this.controlBlimpsViaOverride(blimp);
+        // this.controlBlimpsViaOverride(blimp);
 
         blimps.push(
           <BlimpButton
@@ -270,6 +262,7 @@ region: Render Main App
             controllerId={this.getControllersIndexAttachedToBlimp(blimp.id)}
             blimpIndex={blimp.id}
             mode={blimp.isAutonomous ? "Autonomous" : "Human-Override"}
+            sendHistory={blimp.send_history}
           />
         );
       }
