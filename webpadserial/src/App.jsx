@@ -272,7 +272,10 @@ region: Render Main App
     <div className="App">
       <div className="App-container" onClick={(e) => this.selectController(null)} >
         <div className="Dashboard-container">
-          <div className="Timekeeper"> </div>
+          <div className="Timekeeper-container">
+            <div className="clock_big">4:59<little>.9</little></div>
+            <div className="clock_small">29:59</div>
+          </div>
           <div className="BlimpGrid">
             <Transition
               keys={blimps?.map(obj => obj.key)}
@@ -289,6 +292,9 @@ region: Render Main App
             }}</Transition>
           </div>
         </div>
+        <div className="Settings-container Settings-sidebar">
+          test
+        </div>
       </div>
       <footer className="App-footer" >
         <div className="Connection-container">
@@ -300,6 +306,9 @@ region: Render Main App
         </div>
         <div className="controllers" onClickCapture={(e) => this.selectController(null)} >
           {controllers}
+        </div>
+        <div className="Settings-btn footerButton">
+          Settings
         </div>
       </footer>
     </div>

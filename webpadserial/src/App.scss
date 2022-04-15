@@ -41,6 +41,17 @@ body {
   overflow-y: auto;
 }
 
+.Timekeeper-container {
+  display: none;
+}
+
+.Settings-sidebar {
+  display: none;
+  min-width: 18rem;
+  background: hsl(0, 0%, 88%);
+  padding: 1rem 1rem 0.5rem;
+}
+
 .BlimpGrid {
   display: flex;
   flex-flow: row wrap;
